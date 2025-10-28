@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WeekConfig",
+  "type": "object",
+  "required": [
+    "week_start_date",
+    "variability_window_weeks",
+    "max_daily_cook_times",
+    "pantry"
+  ],
+  "properties": {
+    "week_start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "people": {
+      "type": "number"
+    },
+    "variability_window_weeks": {
+      "type": "number"
+    },
+    "max_daily_cook_times": {
+      "type": "object"
+    },
+    "skip_meals": {
+      "type": "object"
+    },
+    "enable_meal_prep_sunday": {
+      "type": "boolean"
+    },
+    "meal_prep_max_minutes": {
+      "type": "number"
+    },
+    "preferred_prep_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pantry": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
