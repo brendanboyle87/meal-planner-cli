@@ -1,0 +1,105 @@
+[
+  {
+    "id": "r001",
+    "name": "Overnight Oats with Berries",
+    "meals": [
+      "breakfast"
+    ],
+    "tags": [
+      "quick",
+      "no_cook",
+      "meal_prep_friendly"
+    ],
+    "prep_time_min": 10,
+    "cook_time_min": 0,
+    "servings_per_recipe": 4,
+    "yields_prep_item": [
+      "overnight_oats_base"
+    ],
+    "uses_prep_item": [],
+    "ingredients": [
+      {
+        "item": "rolled oats",
+        "qty": 2,
+        "unit": "cups",
+        "category": "grains"
+      },
+      {
+        "item": "berries",
+        "qty": 2,
+        "unit": "cups",
+        "category": "produce"
+      }
+    ]
+  },
+  {
+    "id": "r003",
+    "name": "Turkey & Hummus Wrap",
+    "meals": [
+      "lunch"
+    ],
+    "tags": [
+      "quick",
+      "no_cook"
+    ],
+    "prep_time_min": 10,
+    "cook_time_min": 0,
+    "servings_per_recipe": 1,
+    "yields_prep_item": [],
+    "uses_prep_item": [],
+    "ingredients": [
+      {
+        "item": "tortilla",
+        "qty": 1,
+        "unit": "count",
+        "category": "grains"
+      },
+      {
+        "item": "sliced turkey",
+        "qty": 4,
+        "unit": "oz",
+        "category": "deli"
+      },
+      {
+        "item": "hummus",
+        "qty": 2,
+        "unit": "tbsp",
+        "category": "deli"
+      }
+    ]
+  },
+  {
+    "id": "r006",
+    "name": "Lentil Soup (Meal-Prep)",
+    "meals": [
+      "lunch",
+      "dinner"
+    ],
+    "tags": [
+      "meal_prep_friendly",
+      "reheats_well",
+      "one_pot"
+    ],
+    "prep_time_min": 10,
+    "cook_time_min": 35,
+    "servings_per_recipe": 6,
+    "yields_prep_item": [
+      "lentil_soup_portions"
+    ],
+    "uses_prep_item": [],
+    "ingredients": [
+      {
+        "item": "lentils",
+        "qty": 2,
+        "unit": "cups",
+        "category": "bulk"
+      },
+      {
+        "item": "stock",
+        "qty": 6,
+        "unit": "cups",
+        "category": "pantry"
+      }
+    ]
+  }
+]

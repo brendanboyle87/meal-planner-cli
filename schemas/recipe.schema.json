@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Recipe",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "meals",
+    "ingredients"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "meals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "prep_time_min": {
+      "type": "number"
+    },
+    "cook_time_min": {
+      "type": "number"
+    },
+    "servings_per_recipe": {
+      "type": "number"
+    },
+    "yields_prep_item": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "uses_prep_item": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ingredients": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}
