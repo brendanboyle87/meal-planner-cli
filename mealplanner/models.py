@@ -57,6 +57,8 @@ class Recipe:
     prep_time_min: float
     cook_time_min: float
     servings_per_recipe: float
+    produces_leftovers: bool
+    leftovers_replace_meal: Optional[str]
     yields_prep_item: List[str]
     uses_prep_item: List[str]
     ingredients: List[Ingredient]
@@ -75,6 +77,12 @@ class Recipe:
             prep_time_min=float(data.get("prep_time_min", 0)),
             cook_time_min=float(data.get("cook_time_min", 0)),
             servings_per_recipe=float(data.get("servings_per_recipe", 1)),
+            produces_leftovers=bool(data.get("produces_leftovers", False)),
+            leftovers_replace_meal=(
+                data.get("leftovers_replace_meal").lower()
+                if isinstance(data.get("leftovers_replace_meal"), str)
+                else None
+            ),
             yields_prep_item=list(data.get("yields_prep_item", [])),
             uses_prep_item=list(data.get("uses_prep_item", [])),
             ingredients=[Ingredient.from_dict(item) for item in data.get("ingredients", [])],
@@ -89,6 +97,8 @@ class Recipe:
             "prep_time_min": self.prep_time_min,
             "cook_time_min": self.cook_time_min,
             "servings_per_recipe": self.servings_per_recipe,
+            "produces_leftovers": self.produces_leftovers,
+            "leftovers_replace_meal": self.leftovers_replace_meal,
             "yields_prep_item": list(self.yields_prep_item),
             "uses_prep_item": list(self.uses_prep_item),
             "ingredients": [ingredient.to_dict() for ingredient in self.ingredients],
@@ -100,9 +110,8 @@ class WeekConfig:
     """Configuration describing the preferences for a planning week."""
 
     week_start_date: date
-    people: int
     variability_window_weeks: int
-    max_daily_cook_times: Dict[str, Dict[str, float]]
+    allow_high_effort_dinner: Dict[str, bool]
     skip_meals: Dict[str, List[str]]
     enable_meal_prep_sunday: bool
     meal_prep_max_minutes: Optional[int]
@@ -112,15 +121,27 @@ class WeekConfig:
     @staticmethod
     def from_dict(data: dict) -> "WeekConfig":
         week_start = datetime.fromisoformat(data["week_start_date"]).date()
+        allow_high_effort: Dict[str, bool] = {}
+        for day, flag in data.get("allow_high_effort_dinner", {}).items():
+            try:
+                canonical = ensure_day_name(day)
+            except ValueError:
+                continue
+            allow_high_effort[canonical] = bool(flag)
+
+        skip_meals: Dict[str, List[str]] = {}
+        for day, meals in data.get("skip_meals", {}).items():
+            try:
+                canonical = ensure_day_name(day)
+            except ValueError:
+                continue
+            skip_meals[canonical] = list(meals)
+
         return WeekConfig(
             week_start_date=week_start,
-            people=int(data.get("people", 1)),
             variability_window_weeks=int(data.get("variability_window_weeks", 0)),
-            max_daily_cook_times={
-                day: {meal: float(limit) for meal, limit in meals.items()}
-                for day, meals in data.get("max_daily_cook_times", {}).items()
-            },
-            skip_meals={day: list(meals) for day, meals in data.get("skip_meals", {}).items()},
+            allow_high_effort_dinner=allow_high_effort,
+            skip_meals=skip_meals,
             enable_meal_prep_sunday=bool(data.get("enable_meal_prep_sunday", False)),
             meal_prep_max_minutes=data.get("meal_prep_max_minutes"),
             preferred_prep_items=list(data.get("preferred_prep_items", [])),
@@ -130,11 +151,8 @@ class WeekConfig:
     def to_dict(self) -> dict:
         return {
             "week_start_date": self.week_start_date.isoformat(),
-            "people": self.people,
             "variability_window_weeks": self.variability_window_weeks,
-            "max_daily_cook_times": {
-                day: dict(meals) for day, meals in self.max_daily_cook_times.items()
-            },
+            "allow_high_effort_dinner": dict(self.allow_high_effort_dinner),
             "skip_meals": {day: list(meals) for day, meals in self.skip_meals.items()},
             "enable_meal_prep_sunday": self.enable_meal_prep_sunday,
             "meal_prep_max_minutes": self.meal_prep_max_minutes,
@@ -146,6 +164,13 @@ class WeekConfig:
         index = DAY_NAMES.index(day_name)
         return self.week_start_date + timedelta(days=index)
 
+    @property
+    def people(self) -> int:
+        return 2
+
+    def allows_high_effort_dinner(self, day_name: str) -> bool:
+        return bool(self.allow_high_effort_dinner.get(day_name, False))
+
 
 @dataclass
 class PlanMeal:
@@ -155,6 +180,9 @@ class PlanMeal:
     recipe_id: Optional[str]
     recipe_name: Optional[str]
     total_time_min: Optional[float]
+    is_leftover: bool = False
+    leftover_source_id: Optional[str] = None
+    leftover_source_name: Optional[str] = None
 
 
 @dataclass

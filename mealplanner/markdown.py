@@ -13,8 +13,14 @@ def build_plan_markdown(plan: dict) -> str:
         meals = day.get("meals", [])
         for meal in meals:
             meal_type = meal.get("meal_type", "").title()
-            recipe = meal.get("recipe_name") or "(skipped)"
             total_time = meal.get("total_time_min")
+            if meal.get("is_leftover"):
+                leftover_name = meal.get("leftover_source_name") or meal.get("recipe_name")
+                recipe_display = f"Leftovers — {leftover_name}" if leftover_name else "Leftovers"
+                lines.append(f"- **{meal_type}:** {recipe_display}")
+                continue
+
+            recipe = meal.get("recipe_name") or "(skipped)"
             if total_time is not None:
                 lines.append(f"- **{meal_type}:** {recipe} ({total_time:.0f} min total)")
             else:

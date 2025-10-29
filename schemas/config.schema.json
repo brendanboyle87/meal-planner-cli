@@ -4,23 +4,21 @@
   "type": "object",
   "required": [
     "week_start_date",
-    "variability_window_weeks",
-    "max_daily_cook_times",
-    "pantry"
+    "variability_window_weeks"
   ],
   "properties": {
     "week_start_date": {
       "type": "string",
       "format": "date"
     },
-    "people": {
-      "type": "number"
-    },
     "variability_window_weeks": {
       "type": "number"
     },
-    "max_daily_cook_times": {
-      "type": "object"
+    "allow_high_effort_dinner": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
     },
     "skip_meals": {
       "type": "object"
@@ -42,6 +40,9 @@
       "items": {
         "type": "string"
       }
+    },
+    "pantry_file": {
+      "type": "string"
     }
   }
 }
