@@ -16,18 +16,24 @@ class PlanningError(RuntimeError):
 
 PlanHistory = Dict[str, List[str]]
 
+HIGH_EFFORT_THRESHOLD_MIN = 30
+
 
 def _recipes_for_meal(recipes: Sequence[Recipe], meal: str) -> List[Recipe]:
     return [recipe for recipe in recipes if meal in recipe.meals]
 
 
-def _filter_by_time_limit(
+def _filter_low_effort_dinners(
     recipes: Iterable[Recipe],
-    limit_minutes: Optional[float],
+    allow_high_effort: bool,
 ) -> List[Recipe]:
-    if limit_minutes is None:
+    if allow_high_effort:
         return list(recipes)
-    return [recipe for recipe in recipes if recipe.total_time_min <= limit_minutes]
+    return [
+        recipe
+        for recipe in recipes
+        if recipe.total_time_min <= HIGH_EFFORT_THRESHOLD_MIN
+    ]
 
 
 def _avoid_recent_recipes(
@@ -85,17 +91,35 @@ def generate_plan(
     recent_recipes = _gather_recent_history(history, config)
     recipe_lookup: Dict[str, Recipe] = {recipe.id: recipe for recipe in recipes}
 
-    for day_name in DAY_NAMES:
+    pending_leftovers: Dict[str, Dict[str, Recipe]] = {}
+
+    for day_index, day_name in enumerate(DAY_NAMES):
         day_date = config.day_date(day_name)
         plan_day = PlanDay(day_name=day_name, date=day_date)
         plan_days.append(plan_day)
 
         skip_meals = set(meal.lower() for meal in config.skip_meals.get(day_name, []))
-        cook_time_limits = {
-            meal.lower(): limit for meal, limit in config.max_daily_cook_times.get(day_name, {}).items()
-        }
+        leftover_meals = pending_leftovers.pop(day_name, {})
 
         for meal in MEAL_TYPES:
+            leftover_entry = leftover_meals.get(meal)
+            if leftover_entry is not None:
+                leftover_recipe = leftover_entry
+                plan_day.meals.append(
+                    PlanMeal(
+                        day_name=day_name,
+                        date=day_date,
+                        meal_type=meal,
+                        recipe_id=None,
+                        recipe_name=leftover_recipe.name,
+                        total_time_min=None,
+                        is_leftover=True,
+                        leftover_source_id=leftover_recipe.id,
+                        leftover_source_name=leftover_recipe.name,
+                    )
+                )
+                continue
+
             if meal in skip_meals:
                 plan_day.meals.append(
                     PlanMeal(
@@ -110,8 +134,9 @@ def generate_plan(
                 continue
 
             candidates = _recipes_for_meal(recipes, meal)
-            limit = cook_time_limits.get(meal)
-            candidates = _filter_by_time_limit(candidates, limit)
+            if meal == "dinner":
+                allow_high_effort = config.allows_high_effort_dinner(day_name)
+                candidates = _filter_low_effort_dinners(candidates, allow_high_effort)
             candidates = _avoid_recent_recipes(candidates, recent_recipes)
 
             recipe = _choose_recipe(candidates, rng)
@@ -128,16 +153,24 @@ def generate_plan(
                 )
                 continue
 
-            plan_day.meals.append(
-                PlanMeal(
-                    day_name=day_name,
-                    date=day_date,
-                    meal_type=meal,
-                    recipe_id=recipe.id,
-                    recipe_name=recipe.name,
-                    total_time_min=recipe.total_time_min,
-                )
+            plan_meal = PlanMeal(
+                day_name=day_name,
+                date=day_date,
+                meal_type=meal,
+                recipe_id=recipe.id,
+                recipe_name=recipe.name,
+                total_time_min=recipe.total_time_min,
             )
+            plan_day.meals.append(plan_meal)
+
+            if (
+                recipe.produces_leftovers
+                and recipe.leftovers_replace_meal in MEAL_TYPES
+                and day_index + 1 < len(DAY_NAMES)
+            ):
+                next_day = DAY_NAMES[day_index + 1]
+                meal_to_replace = recipe.leftovers_replace_meal
+                pending_leftovers.setdefault(next_day, {})[meal_to_replace] = recipe
 
     plan_dict = {
         "week_start_date": config.week_start_date.isoformat(),
@@ -153,6 +186,9 @@ def generate_plan(
                         "recipe_id": meal.recipe_id,
                         "recipe_name": meal.recipe_name,
                         "total_time_min": meal.total_time_min,
+                        "is_leftover": meal.is_leftover,
+                        "leftover_source_id": meal.leftover_source_id,
+                        "leftover_source_name": meal.leftover_source_name,
                     }
                     for meal in day.meals
                 ],

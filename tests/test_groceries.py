@@ -26,9 +26,8 @@ def make_config() -> WeekConfig:
     return WeekConfig.from_dict(
         {
             "week_start_date": "2025-01-12",
-            "people": 4,
             "variability_window_weeks": 2,
-            "max_daily_cook_times": {"Sunday": {"dinner": 60}},
+            "allow_high_effort_dinner": {"Sunday": True},
             "skip_meals": {},
             "enable_meal_prep_sunday": False,
             "meal_prep_max_minutes": None,
@@ -79,12 +78,12 @@ def test_collect_grocery_items_scales_for_people():
     assert len(items) == 2
 
     pasta = next(item for item in items if item.item == "pasta")
-    # 200g per recipe, 4 people -> multiplier 2, used twice in plan -> 800g total
-    assert abs(pasta.quantity - 800) < 1e-6
+    # 200g per recipe, configured household size 2 -> multiplier 1, used twice in plan -> 400g total
+    assert abs(pasta.quantity - 400) < 1e-6
 
     table = build_grocery_table(items)
     assert "pasta" in table
-    assert "800.00" in table
+    assert "400.00" in table
 
     markdown = build_grocery_markdown(items)
     assert "# Grocery List" in markdown

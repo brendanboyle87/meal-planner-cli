@@ -13,6 +13,8 @@
     "prep_time_min": 10,
     "cook_time_min": 0,
     "servings_per_recipe": 4,
+    "produces_leftovers": false,
+    "leftovers_replace_meal": null,
     "yields_prep_item": [
       "overnight_oats_base"
     ],
@@ -45,6 +47,8 @@
     "prep_time_min": 10,
     "cook_time_min": 0,
     "servings_per_recipe": 1,
+    "produces_leftovers": false,
+    "leftovers_replace_meal": null,
     "yields_prep_item": [],
     "uses_prep_item": [],
     "ingredients": [
@@ -83,6 +87,8 @@
     "prep_time_min": 10,
     "cook_time_min": 35,
     "servings_per_recipe": 6,
+    "produces_leftovers": true,
+    "leftovers_replace_meal": "lunch",
     "yields_prep_item": [
       "lentil_soup_portions"
     ],

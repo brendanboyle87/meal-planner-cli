@@ -1,50 +1,14 @@
 {
   "week_start_date": "2025-11-02",
-  "people": 1,
   "variability_window_weeks": 4,
-  "max_daily_cook_times": {
-    "Sunday": {
-      "breakfast": 20,
-      "lunch": 20,
-      "dinner": 90,
-      "snack": 10
-    },
-    "Monday": {
-      "breakfast": 15,
-      "lunch": 10,
-      "dinner": 30,
-      "snack": 5
-    },
-    "Tuesday": {
-      "breakfast": 10,
-      "lunch": 10,
-      "dinner": 20,
-      "snack": 5
-    },
-    "Wednesday": {
-      "breakfast": 15,
-      "lunch": 10,
-      "dinner": 30,
-      "snack": 5
-    },
-    "Thursday": {
-      "breakfast": 10,
-      "lunch": 10,
-      "dinner": 20,
-      "snack": 5
-    },
-    "Friday": {
-      "breakfast": 10,
-      "lunch": 10,
-      "dinner": 25,
-      "snack": 5
-    },
-    "Saturday": {
-      "breakfast": 20,
-      "lunch": 20,
-      "dinner": 45,
-      "snack": 10
-    }
+  "allow_high_effort_dinner": {
+    "Sunday": true,
+    "Monday": false,
+    "Tuesday": false,
+    "Wednesday": false,
+    "Thursday": false,
+    "Friday": true,
+    "Saturday": true
   },
   "skip_meals": {},
   "enable_meal_prep_sunday": true,
@@ -54,10 +18,5 @@
     "jar_salads",
     "overnight_oats_base"
   ],
-  "pantry": [
-    "olive oil",
-    "salt",
-    "pepper",
-    "soy sauce"
-  ]
+  "pantry_file": "configs/pantry_items.example.txt"
 }

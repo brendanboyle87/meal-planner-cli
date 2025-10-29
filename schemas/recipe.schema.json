@@ -36,6 +36,12 @@
     "servings_per_recipe": {
       "type": "number"
     },
+    "produces_leftovers": {
+      "type": "boolean"
+    },
+    "leftovers_replace_meal": {
+      "type": "string"
+    },
     "yields_prep_item": {
       "type": "array",
       "items": {
