@@ -14,12 +14,34 @@ def _read_json(path: Path):
         return json.load(handle)
 
 
+def _recipes_from_raw(raw_data, source: Path) -> List[Recipe]:
+    if isinstance(raw_data, list):
+        return [Recipe.from_dict(item) for item in raw_data]
+    if isinstance(raw_data, dict):
+        return [Recipe.from_dict(raw_data)]
+    raise ValueError(f"Unsupported recipe format in {source}")
+
+
+def _iter_recipe_files(directory: Path) -> list[Path]:
+    recipe_files = [
+        path
+        for path in directory.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".json"}
+    ]
+    recipe_files.sort()
+    return recipe_files
+
+
 def load_recipes(path: Path) -> List[Recipe]:
-    data = _read_json(path)
-    recipes: List[Recipe] = []
-    for raw in data:
-        recipes.append(Recipe.from_dict(raw))
-    return recipes
+    if path.is_dir():
+        recipes: List[Recipe] = []
+        for recipe_path in _iter_recipe_files(path):
+            raw = _read_json(recipe_path)
+            recipes.extend(_recipes_from_raw(raw, recipe_path))
+        return recipes
+
+    raw = _read_json(path)
+    return _recipes_from_raw(raw, path)
 
 
 def _load_pantry_from_file(pantry_path: Path) -> List[str]:
