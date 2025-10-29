@@ -28,7 +28,9 @@ mealplanner plan \
   --out-json out/plan.json
 ```
 
-* `--recipes` – Path to a YAML or JSON file containing the recipe catalogue.
+* `--recipes` – Path to a YAML or JSON file containing the recipe catalogue, or a
+  directory of JSON files (each may contain a single recipe object or a list of
+  recipes).
 * `--config` – Path to the weekly planning configuration.
 * `--out-md` – Destination for the rendered Markdown plan.
 * `--out-json` – Destination for the structured plan data.
