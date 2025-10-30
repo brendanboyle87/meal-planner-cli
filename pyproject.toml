@@ -17,5 +17,8 @@ dependencies = [
 [project.scripts]
 mealplanner = "mealplanner.cli:main"
 
+[tool.setuptools]
+packages = ["mealplanner"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
