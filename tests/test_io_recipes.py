@@ -13,8 +13,6 @@ def _recipe_dict(recipe_id: str) -> dict:
         "prep_time_min": 10,
         "cook_time_min": 20,
         "servings_per_recipe": 4,
-        "produces_leftovers": False,
-        "leftovers_replace_meal": None,
         "yields_prep_item": [],
         "ingredients": [
             {

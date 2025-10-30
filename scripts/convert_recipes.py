@@ -41,7 +41,8 @@ class ConversionArgs:
     overwrite: bool
     dry_run: bool
     raw_output_dir: Optional[Path]
-    use_chat_completions: bool
+    error_output_dir: Optional[Path]
+    use_responses: bool
 
 
 @dataclass
@@ -119,9 +120,14 @@ def _create_parser() -> argparse.ArgumentParser:
         help="Optional directory to dump the raw LLM JSON output for inspection.",
     )
     parser.add_argument(
-        "--use-chat-completions",
+        "--error-output-dir",
+        type=Path,
+        help="Optional directory where validation failures and raw model output will be stored.",
+    )
+    parser.add_argument(
+        "--use-responses",
         action="store_true",
-        help="Use the Chat Completions API instead of the Responses API. Useful for local endpoints without Responses support.",
+        help="Use the Responses API instead of the Chat Completions API.",
     )
     parser.add_argument(
         "--system-prompt",
@@ -174,7 +180,7 @@ def _build_system_prompt(custom_prompt: Optional[str], schema: dict) -> str:
         "- Produce boolean values for yes/no fields.\n"
         f"- Allowed meal types: {meals}.\n"
         "- Include every ingredient with quantity, unit, and grocery category when possible.\n"
-        "- Set produces_leftovers true only when leftovers_replace_meal is provided.\n"
+        "- Leave produces_leftovers and leftovers_replace_meal unset; they will be reviewed manually later.\n"
         "- Use empty strings instead of null when a textual field is unknown.\n"
         "If information is missing, make a reasonable inference and note it in tags."
     )
@@ -201,7 +207,7 @@ def _request_json(
     delay = args.retry_delay
     for attempt in range(1, args.max_retries + 1):
         try:
-            if args.use_chat_completions:
+            if not args.use_responses:
                 response = config.client.chat.completions.create(
                     model=args.model,
                     messages=[
@@ -271,7 +277,10 @@ def _write_recipe(recipe: Recipe, output_path: Path, overwrite: bool, dry_run: b
         logging.info("[dry-run] Would write %s", output_path)
         return
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(recipe.to_dict(), indent=2, ensure_ascii=False) + "\n"
+    payload_dict = recipe.to_dict()
+    payload_dict.pop("produces_leftovers", None)
+    payload_dict.pop("leftovers_replace_meal", None)
+    payload = json.dumps(payload_dict, indent=2, ensure_ascii=False) + "\n"
     output_path.write_text(payload, encoding="utf-8")
     logging.info("Wrote %s", output_path)
 
@@ -285,6 +294,33 @@ def _dump_raw_output(raw_output_dir: Optional[Path], source_path: Path, raw_cont
         logging.info("[dry-run] Would save raw output to %s", destination)
         return
     destination.write_text(raw_content + "\n", encoding="utf-8")
+
+
+def _dump_error_output(
+    error_output_dir: Optional[Path],
+    relative_path: Path,
+    raw_content: str,
+    error_message: str,
+    dry_run: bool,
+) -> None:
+    if not error_output_dir:
+        return
+
+    destination = error_output_dir / relative_path
+    destination = destination.with_suffix(".json")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    error_path = destination.with_suffix(".error.txt")
+
+    if dry_run:
+        logging.info(
+            "[dry-run] Would save failed output to %s and error details to %s",
+            destination,
+            error_path,
+        )
+        return
+
+    destination.write_text(raw_content + "\n", encoding="utf-8")
+    error_path.write_text(error_message + "\n", encoding="utf-8")
 
 
 def convert_recipes() -> None:
@@ -305,7 +341,8 @@ def convert_recipes() -> None:
         overwrite=ns.overwrite,
         dry_run=ns.dry_run,
         raw_output_dir=ns.raw_output_dir,
-        use_chat_completions=ns.use_chat_completions,
+        error_output_dir=ns.error_output_dir,
+        use_responses=ns.use_responses,
     )
 
     if not args.input_dir.exists():
@@ -315,6 +352,8 @@ def convert_recipes() -> None:
 
     if args.raw_output_dir:
         args.raw_output_dir.mkdir(parents=True, exist_ok=True)
+    if args.error_output_dir:
+        args.error_output_dir.mkdir(parents=True, exist_ok=True)
 
     schema = _load_schema(args.schema_path)
     validator = _create_validator(schema)
@@ -337,7 +376,19 @@ def convert_recipes() -> None:
         raw_json = _request_json(args, llm_config, user_prompt)
         _dump_raw_output(args.raw_output_dir, source_path, raw_json, args.dry_run)
 
-        recipes = _parse_recipes(raw_json, source_path, validator)
+        try:
+            recipes = _parse_recipes(raw_json, source_path, validator)
+        except ValueError as exc:
+            logging.error("Failed to validate %s: %s", source_path, exc)
+            relative_path = source_path.relative_to(args.input_dir)
+            _dump_error_output(
+                args.error_output_dir,
+                relative_path,
+                raw_json,
+                str(exc),
+                args.dry_run,
+            )
+            continue
         for index, recipe in enumerate(recipes, start=1):
             relative = source_path.relative_to(args.input_dir)
             output_path = args.output_dir / relative
