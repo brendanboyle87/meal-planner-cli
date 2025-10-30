@@ -37,10 +37,12 @@
       "type": "number"
     },
     "produces_leftovers": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Set manually when the recipe should create leftovers for a future meal."
     },
     "leftovers_replace_meal": {
-      "type": "string"
+      "type": "string",
+      "description": "Meal type that leftovers will replace; leave unset during automated conversion."
     },
     "yields_prep_item": {
       "type": "array",

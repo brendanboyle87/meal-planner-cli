@@ -103,12 +103,15 @@ Key options:
 * `--api-key`, `--base-url`, and `--model` (or the `OPENAI_API_KEY`,
   `OPENAI_BASE_URL`, `OPENAI_MODEL` environment variables) configure the target
   endpoint.
-* `--use-chat-completions` switches from the Responses API to the classic Chat
-  Completions API for local deployments that do not implement the Responses
-  interface.
+* Chat Completions are used by default. Pass `--use-responses` to request the
+  Responses API instead when your endpoint supports it.
 * `--overwrite` allows replacing existing JSON files. By default the script
   refuses to overwrite.
 * `--raw-output-dir` saves the untouched LLM output for debugging.
+* `--error-output-dir` stores any invalid model responses alongside a text file
+  describing the schema validation failure so you can inspect and retry them
+  later.
 
-Every generated recipe is validated with `jsonschema` before it is written, and
-the script exits with an error if validation fails.
+Every generated recipe is validated with `jsonschema` before it is written. Any
+validation failures are logged, skipped, and—when `--error-output-dir` is
+provided—archived for follow-up fixes.
