@@ -64,3 +64,32 @@ mealplanner groceries \
 4. Share or archive the Markdown and CSV files as needed.
 
 Refer to `SPEC.md` for the comprehensive feature specification if required.
+
+## Converting unstructured recipes with an LLM
+
+Use `scripts/convert_recipes.py` to turn a directory of plain-text recipes into
+schema-compliant JSON files by delegating extraction to an OpenAI-compatible
+language model endpoint. The script validates the structured response against
+`schemas/recipe.schema.json` and writes one JSON file per recipe.
+
+```bash
+python scripts/convert_recipes.py raw_recipes/ structured_recipes/ \
+  --model gpt-4.1-mini \
+  --base-url "https://api.openai.com/v1" \
+  --raw-output-dir tmp/raw_llm
+```
+
+Key options:
+
+* `--api-key`, `--base-url`, and `--model` (or the `OPENAI_API_KEY`,
+  `OPENAI_BASE_URL`, `OPENAI_MODEL` environment variables) configure the target
+  endpoint.
+* `--use-chat-completions` switches from the Responses API to the classic Chat
+  Completions API for local deployments that do not implement the Responses
+  interface.
+* `--overwrite` allows replacing existing JSON files. By default the script
+  refuses to overwrite.
+* `--raw-output-dir` saves the untouched LLM output for debugging.
+
+Every generated recipe is validated with `jsonschema` before it is written, and
+the script exits with an error if validation fails.
