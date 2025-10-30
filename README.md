@@ -6,6 +6,25 @@ it with Python 3.11 or newer.
 
 ## Installation
 
+### Using uv (recommended)
+
+[`uv`](https://docs.astral.sh/uv/) manages dependencies and virtual
+environments directly from `pyproject.toml`.
+
+```bash
+uv sync
+```
+
+This creates a virtual environment (stored in `.venv/`) and installs
+dependencies pinned in `uv.lock`. Run commands within the environment using
+`uv run`:
+
+```bash
+uv run mealplanner --help
+```
+
+### With pip
+
 ```bash
 pip install -e .
 ```
